@@ -27,6 +27,7 @@ class TarStream {
 	public:
 	TarStream(string baseDir, vector<string>);
 	~TarStream();
+	const string& getChunk(unsigned long start, unsigned long size);
 };
 
 #endif //_TARSTREAM_H_
