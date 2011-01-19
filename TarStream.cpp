@@ -1,6 +1,6 @@
 #include <string>
 #include <vector>
-#include "Tar.h"
+#include "TarStream.h"
 
 
 TarStream::TarStream(string baseDir, vector<string> files)
