@@ -22,8 +22,8 @@ TarStream::~TarStream()
 string TarStream::getChunk(FileLen start, FileLen size)
 {
 	string result;
-	vector<class TarFile>::const_iterator ci;
 	FileLen file_size;
+	vector<class TarFile>::const_iterator ci;
 	for (ci = files.begin(); ci != files.end(); ++ci)
 	{
 		file_size = ci->getSize();
@@ -108,5 +108,18 @@ const FileLen TarStream::TarFile::getSize() const
 
 string TarStream::TarFile::getChunk(FileLen start, FileLen size) const
 {
+	char buf[size];
+	char *p = buf;
+	FILE *pFile = fopen(header.name, "r");
+	if (start < sizeof(tarHeaderBlock))
+	{
+		memcpy(buf, (const char *)&header, sizeof(tarHeaderBlock)-start);
+		p += start;
+		start = 0;
+	}
+	fseek(pFile, start, SEEK_SET);
+	fgets(p, size - (p - buf), pFile);
+	fclose(pFile);
+	return (string)buf;
 }
 
