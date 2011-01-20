@@ -47,6 +47,14 @@ string TarStream::getChunk(FileLen start, FileLen size)
 		}
 		ci++;
 	}
+	if(size > 0)
+	{
+		// add tar tail
+		if(size > 2 * sizeof(tarHeaderBlock))
+			size = 2 * sizeof(tarHeaderBlock);
+		while(size--)
+			result += (char)0;
+	}
 	
 	return result;
 }
