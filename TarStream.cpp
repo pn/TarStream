@@ -57,8 +57,25 @@ TarStream::TarFile::TarFile(string baseDir, string name) : name(name)
 	stat(name.c_str(), &filestat);
 	size = filestat.st_size;
 	memset(&header, 0, sizeof(header));
+	snprintf(header.name, sizeof(header.name), "%s", name.c_str());//TODO: long file names
+	snprintf(header.mode, sizeof(header.mode), "%07o", filestat.st_mode);
+	snprintf(header.uid, sizeof(header.uid), "%08d", 1);
+	snprintf(header.gid, sizeof(header.gid), "%08d", 1);
 	snprintf(header.size, sizeof(header.size), "%llu", size);
-	printf("Created file %s, size %llu\n", this->name.c_str(), size);
+	snprintf(header.magic, sizeof(header.magic), "ustar  ");
+	snprintf(header.uname, sizeof(header.uname), "root");
+	snprintf(header.gname, sizeof(header.gname), "root");
+	snprintf(header.mtime, sizeof(header.mtime), "%011lo", filestat.st_mtime);
+	unsigned int sum = 0;
+	char *p = (char *) &header;
+	char *q = p + sizeof(header);
+	while (p < q) sum += *p++ & 0xff;
+	for (int i = 0; i < sizeof(header.chksum); ++i) {
+		sum += ' ';
+	}
+	snprintf(header.chksum, sizeof(header.chksum), "%06o", sum);
+	
+	fprintf(stderr, "Created file %s, size %llu\n", this->name.c_str(), size);
 }
 
 TarStream::TarFile::~TarFile()
@@ -73,3 +90,4 @@ const FileLen TarStream::TarFile::getSize() const
 string TarStream::TarFile::getChunk(FileLen start, FileLen size) const
 {
 }
+
