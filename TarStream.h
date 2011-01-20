@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 using namespace std;
+typedef unsigned long long FileLen;
 
 struct tarHeaderBlock {
     char name[100];     // file name
@@ -25,9 +26,23 @@ struct tarHeaderBlock {
 
 class TarStream {
 	public:
-	TarStream(string baseDir, vector<string>);
-	~TarStream();
-	const string& getChunk(unsigned long start, unsigned long size);
+		TarStream(string baseDir, vector<string>);
+		~TarStream();
+		string getChunk(FileLen start, FileLen size);
+	private:
+		class TarFile {
+			public:
+				const FileLen getSize() const;
+				TarFile(string, string);
+				~TarFile();
+				string getChunk(FileLen start, FileLen size) const;
+	private:
+			private:
+				string name;
+				FileLen size;
+				tarHeaderBlock header;
+		};
+		vector<class TarFile> files;
 };
 
 #endif //_TARSTREAM_H_
