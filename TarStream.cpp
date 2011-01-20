@@ -59,6 +59,17 @@ string TarStream::getChunk(FileLen start, FileLen size)
 	return result;
 }
 
+FileLen TarStream::getSize() const
+{
+	FileLen result = 0;
+	vector<class TarFile>::const_iterator ci;
+	for (ci = files.begin(); ci != files.end(); ++ci)
+	{
+		result += ci->getSize();
+	}
+	return result + 2 * sizeof(tarHeaderBlock);
+}
+
 TarStream::TarFile::TarFile(string baseDir, string name) : name(name)
 {
 	struct stat filestat;

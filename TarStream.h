@@ -29,6 +29,7 @@ class TarStream {
 		TarStream(string baseDir, vector<string>);
 		~TarStream();
 		string getChunk(FileLen start, FileLen size);
+		FileLen getSize() const;
 	private:
 		class TarFile {
 			public:
