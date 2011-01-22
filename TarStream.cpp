@@ -21,8 +21,9 @@ TarStream::~TarStream()
 
 string TarStream::getChunk(FileLen start, FileLen size)
 {
-	string result;
-	FileLen file_size;
+	char buf[size];
+	char *p = buf;
+	FileLen file_size, orig_size = size;
 	vector<class TarFile>::const_iterator ci;
 	for (ci = files.begin(); ci != files.end(); ++ci)
 	{
@@ -32,30 +33,27 @@ string TarStream::getChunk(FileLen start, FileLen size)
 		else
 			break;
 	}
-	while(size > 0 || ci == files.end())
+	while(size > 0 && ci != files.end())
 	{
 		if (size > file_size)
 		{
-			result += ci->getChunk(start, file_size);
+			memcpy(p, ci->getChunk(start, file_size).c_str(), file_size);
+			p+=file_size;
 			size -= file_size;
 			start = 0;
 		}
 		else
 		{
-			result += ci->getChunk(start, size);
+			memcpy(p, ci->getChunk(start, size).c_str(), size);
+			p+=size;
+			size = 0;
 			break;
 		}
 		ci++;
 	}
-	if(size > 0)
-	{
-		// add tar tail
-		if(size > 2 * sizeof(tarHeaderBlock))
-			size = 2 * sizeof(tarHeaderBlock);
-		while(size--)
-			result += (char)0;
-	}
+	memset(p, 0, size);
 	
+	string result(buf, orig_size);
 	return result;
 }
 
@@ -106,7 +104,7 @@ TarStream::TarFile::~TarFile()
 
 const FileLen TarStream::TarFile::getSize() const
 {
-	return (FileLen)header.size + sizeof(header);
+	return size + 2 * sizeof(header) - size % sizeof(header);
 }
 
 string TarStream::TarFile::getChunk(FileLen start, FileLen size) const
@@ -114,15 +112,26 @@ string TarStream::TarFile::getChunk(FileLen start, FileLen size) const
 	char buf[size];
 	char *p = buf;
 	FILE *pFile = fopen(header.name, "r");
-	if (start < sizeof(tarHeaderBlock))
+	if (start <= sizeof(header))
 	{
-		memcpy(buf, (const char *)&header, sizeof(tarHeaderBlock)-start);
-		p += start;
-		start = 0;
+		memcpy(p, (const char *)&header, sizeof(header)-start);
+		p += sizeof(header)-start;
 	}
-	fseek(pFile, start, SEEK_SET);
-	fgets(p, size - (p - buf), pFile);
-	fclose(pFile);
-	return (string)buf;
+	if(start+size > sizeof(header))
+	{
+		if(start <= sizeof(header))
+			start = 0;
+		else
+			start -= sizeof(header);
+		fseek(pFile, start, SEEK_SET);
+		FileLen numread = fread(p, 1, size - (p - buf), pFile);
+		if (numread < size - (p - buf))
+		{
+			memset(p+numread, 0, size - (p - buf) - numread);
+		}
+		fclose(pFile);
+	}
+	string result(buf, size);
+	return result;
 }
 
