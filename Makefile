@@ -8,7 +8,8 @@ clean:
 simpletest: test TarStream.o
 	-@rm -rf tmp
 	mkdir -p tmp
-	./test . TarStream.o test > tmp/test.tar
+	./test . TarStream.o test
+	mv test.tar tmp
 	tar xf tmp/test.tar -C tmp
 	md5sum tmp/TarStream.o > tmp/TarStream.o.md5
 	md5sum tmp/test > tmp/test.md5
