@@ -72,27 +72,30 @@ FileLen TarStream::getSize() const
 
 TarStream::TarFile::TarFile(string baseDir, string name) : name(name)
 {
+	const char magic = 6;
 	struct stat filestat;
 	stat(name.c_str(), &filestat);
 	size = filestat.st_size;
 	memset(&header, 0, sizeof(header));
 	snprintf(header.name, sizeof(header.name), "%s", name.c_str());//TODO: long file names
-	snprintf(header.mode, sizeof(header.mode), "%07o", filestat.st_mode);
-	snprintf(header.uid, sizeof(header.uid), "%08d", 1);
-	snprintf(header.gid, sizeof(header.gid), "%08d", 1);
-	snprintf(header.size, sizeof(header.size), "%llu", size);
+	snprintf(header.mode, sizeof(header.mode), "%07o", (unsigned int)filestat.st_mode & (unsigned int)0777);
+	snprintf(header.uid, sizeof(header.uid), "%07o", filestat.st_uid);
+	snprintf(header.gid, sizeof(header.gid), "%07o", filestat.st_gid);
+	snprintf(header.size, sizeof(header.size), "%011llo", size);
 	snprintf(header.magic, sizeof(header.magic), "ustar  ");
-	snprintf(header.uname, sizeof(header.uname), "root");
-	snprintf(header.gname, sizeof(header.gname), "root");
+	snprintf(header.uname, sizeof(header.uname), "");
+	snprintf(header.gname, sizeof(header.gname), "");
 	snprintf(header.mtime, sizeof(header.mtime), "%011lo", filestat.st_mtime);
+	memset(header.chksum, ' ' + magic, sizeof(header.chksum));
 	unsigned int sum = 0;
 	char *p = (char *) &header;
 	char *q = p + sizeof(header);
-	while (p < q) sum += *p++ & 0xff;
-	for (int i = 0; i < sizeof(header.chksum); ++i) {
-		sum += ' ';
-	}
+	int i=0;
+	while (p < q) { sum += *p++ & 0xff; i++;}
+	memset(header.chksum, ' ', sizeof(header.chksum));
+	fprintf(stderr, "summed chars %d\n", i);
 	snprintf(header.chksum, sizeof(header.chksum), "%06o", sum);
+	header.typeflag = '0'; // regular file
 	
 	fprintf(stderr, "Created file %s, size %llu\n", this->name.c_str(), size);
 }
