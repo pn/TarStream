@@ -4,6 +4,8 @@
 #include "TarStream.h"
 #include "stdio.h"
 
+const int CHUNK = 10000;
+
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -23,11 +25,11 @@ int main(int argc, char *argv[])
 
 	int f = open("test.tar", O_WRONLY|O_CREAT, 0644);
 	int i;
-	for (i = 0; i < tar.getSize(); i+=1024)
+	for (i = 0; i < tar.getSize(); i+=CHUNK)
 	{
-		string s = tar.getChunk(i, 1024);
-		if (tar.getSize() - i >= 1024)
-			write(f, (void*)s.c_str(), 1024);
+		string s = tar.getChunk(i, CHUNK);
+		if (tar.getSize() - i >= CHUNK)
+			write(f, (void*)s.c_str(), CHUNK);
 		else
 			write(f, (void*)s.c_str(), tar.getSize() - i);
 	}
