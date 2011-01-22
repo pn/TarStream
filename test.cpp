@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 	}
 	TarStream tar((string)argv[1], files);
 
-	int f = open("tmp.tar", O_WRONLY);
+	int f = open("test.tar", O_WRONLY|O_CREAT, 0644);
 	int i;
 	for (i = 0; i < tar.getSize(); i+=1024)
 	{
