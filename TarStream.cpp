@@ -35,11 +35,11 @@ string TarStream::getChunk(FileLen start, FileLen size)
 	}
 	while(size > 0 && ci != files.end())
 	{
-		if (size > file_size)
+		if (size > file_size - start)
 		{
-			memcpy(p, ci->getChunk(start, file_size).c_str(), file_size);
-			p+=file_size;
-			size -= file_size;
+			memcpy(p, ci->getChunk(start, file_size - start).c_str(), file_size - start);
+			p+=file_size - start;
+			size -= (file_size - start);
 			start = 0;
 		}
 		else
