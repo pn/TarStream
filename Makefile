@@ -13,8 +13,8 @@ simpletest: test TarStream.o
 	tar xf tmp/test.tar -C tmp
 	md5sum tmp/TarStream.o > tmp/TarStream.o.md5
 	md5sum tmp/test > tmp/test.md5
-	md5sum -c TarStream.o
-	md5sum -c test
+	md5sum -c tmp/TarStream.o.md5
+	md5sum -c tmp/test.md5
 	-rm -rf tmp
 debug:
 	gdb --tui --args ./test . TarStream.o test
