@@ -36,7 +36,6 @@ class TarStream {
 				TarFile(string, string);
 				~TarFile();
 				string getChunk(size_t start, size_t size) const;
-	private:
 			private:
 				string name;
 				size_t size;
