@@ -19,11 +19,11 @@ TarStream::~TarStream()
 {
 }
 
-string TarStream::getChunk(FileLen start, FileLen size)
+string TarStream::getChunk(size_t start, size_t size)
 {
 	char buf[size];
 	char *p = buf;
-	FileLen file_size, orig_size = size;
+	size_t file_size, orig_size = size;
 	vector<class TarFile>::const_iterator ci;
 	for (ci = files.begin(); ci != files.end(); ++ci)
 	{
@@ -57,9 +57,9 @@ string TarStream::getChunk(FileLen start, FileLen size)
 	return result;
 }
 
-FileLen TarStream::getSize() const
+size_t TarStream::getSize() const
 {
-	FileLen result = 0;
+	size_t result = 0;
 	vector<class TarFile>::const_iterator ci;
 	for (ci = files.begin(); ci != files.end(); ++ci)
 	{
@@ -79,7 +79,7 @@ TarStream::TarFile::TarFile(string baseDir, string name) : name(name)
 	snprintf(header.mode, sizeof(header.mode), "%07o", (unsigned int)filestat.st_mode & (unsigned int)0777);
 	snprintf(header.uid, sizeof(header.uid), "%07o", filestat.st_uid);
 	snprintf(header.gid, sizeof(header.gid), "%07o", filestat.st_gid);
-	snprintf(header.size, sizeof(header.size), "%011llo", size);
+	snprintf(header.size, sizeof(header.size), "%011llo", (unsigned long long)size);
 	snprintf(header.magic, sizeof(header.magic), "ustar  ");
 	snprintf(header.uname, sizeof(header.uname), "");
 	snprintf(header.gname, sizeof(header.gname), "");
@@ -95,19 +95,19 @@ TarStream::TarFile::TarFile(string baseDir, string name) : name(name)
 	snprintf(header.chksum, sizeof(header.chksum), "%06o", sum);
 	header.typeflag = '0'; // regular file
 	
-	fprintf(stderr, "Created file %s, size %llu\n", this->name.c_str(), size);
+	fprintf(stderr, "Created file %s, size %llu\n", this->name.c_str(), (unsigned long long)size);
 }
 
 TarStream::TarFile::~TarFile()
 {
 }
 
-const FileLen TarStream::TarFile::getSize() const
+const size_t TarStream::TarFile::getSize() const
 {
 	return size + 2 * sizeof(header) - size % sizeof(header);
 }
 
-string TarStream::TarFile::getChunk(FileLen start, FileLen size) const
+string TarStream::TarFile::getChunk(size_t start, size_t size) const
 {
 	char buf[size];
 	char *p = buf;
@@ -124,7 +124,7 @@ string TarStream::TarFile::getChunk(FileLen start, FileLen size) const
 		else
 			start -= sizeof(header);
 		fseek(pFile, start, SEEK_SET);
-		FileLen numread = fread(p, 1, size - (p - buf), pFile);
+		size_t numread = fread(p, 1, size - (p - buf), pFile);
 		if (numread < size - (p - buf))
 		{
 			memset(p+numread, 0, size - (p - buf) - numread);
