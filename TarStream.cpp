@@ -65,7 +65,7 @@ size_t TarStream::getSize() const
 	{
 		result += ci->getSize();
 	}
-	return result + 2 * sizeof(tarHeaderBlock);
+	return result + 2 * sizeof(TarHeaderBlock);
 }
 
 TarStream::TarFile::TarFile(string baseDir, string name) : name(name)

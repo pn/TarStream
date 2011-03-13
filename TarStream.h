@@ -4,7 +4,7 @@
 #include <vector>
 using namespace std;
 
-struct tarHeaderBlock {
+struct TarHeaderBlock {
     char name[100];     // file name
     char mode[8];       // file mode
     char uid[8];        // owner user ID
@@ -39,7 +39,7 @@ class TarStream {
 			private:
 				string name;
 				size_t size;
-				tarHeaderBlock header;
+				TarHeaderBlock header;
 		};
 		vector<class TarFile> files;
 };
