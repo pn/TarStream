@@ -1,27 +1,35 @@
 #include <string.h>
 #include <vector>
+#include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include <stdio.h>
 #include "TarStream.h"
 using namespace std;
 
-TarStream::TarStream(string baseDir, vector<string> files)
+TarStream::TarStream() : readCursor(0)
 {
-	vector<string>::const_iterator ci;
-	for (ci = files.begin(); ci != files.end(); ++ci)
-	{
-		TarEntry file(baseDir, *ci);
-		this->files.push_back(file);
-	}
 }
 
 TarStream::~TarStream()
 {
 }
 
-string TarStream::getChunk(size_t start, size_t size)
+void TarStream::putFile( const std::string& filePath, const std::string& pathInTar )
 {
-	char buf[size];
+	TarEntry entry(filePath, pathInTar);
+	this->files.push_back(entry);
+}
+
+void TarStream::putDirectory( const std::string& dirPath )
+{
+	TarEntry entry(dirPath, dirPath, true);
+	this->files.push_back(entry);
+}
+
+size_t TarStream::getChunk(char* buf, size_t size)
+{
+	size_t start = readCursor;
 	char *p = buf;
 	size_t file_size, orig_size = size;
 	vector<class TarEntry>::const_iterator ci;
@@ -35,6 +43,7 @@ string TarStream::getChunk(size_t start, size_t size)
 	}
 	while(size > 0 && ci != files.end())
 	{
+		file_size = ci->getSize();
 		if (size > file_size - start)
 		{
 			memcpy(p, ci->getChunk(start, file_size - start).c_str(), file_size - start);
@@ -52,9 +61,20 @@ string TarStream::getChunk(size_t start, size_t size)
 		ci++;
 	}
 	memset(p, 0, size);
-	
-	string result(buf, orig_size);
-	return result;
+	readCursor += orig_size - size;
+	if(getSize()-readCursor < size)
+		return orig_size + getSize() - readCursor;
+	return orig_size;
+}
+
+bool TarStream::seekg (size_t pos)
+{
+	if(pos < 0 || pos >=getSize())
+	{
+		return false;
+	}
+	readCursor = pos;
+	return true;
 }
 
 size_t TarStream::getSize() const
@@ -77,11 +97,19 @@ unsigned int TarStream::TarEntry::calculateChkSum(const char *header, const size
 	return sum;
 }
 
-TarStream::TarEntry::TarEntry(string baseDir, string name) : name(name)
+TarStream::TarEntry::TarEntry(string path, string name, bool dir) : path(path)
 {
+	if ( name == "")
+		name = path;
+	this->path = path;
+	this->name = name;
+	isDir = dir;
 	struct stat filestat;
-	stat(name.c_str(), &filestat);
-	size = filestat.st_size;
+	stat(path.c_str(), &filestat);
+	if(isDir)
+		size = 0;
+	else
+		size = filestat.st_size;
 	memset(&header, 0, sizeof(header));
 	snprintf(header.name, sizeof(header.name), "%s", name.c_str());//TODO: long file names
 	snprintf(header.mode, sizeof(header.mode), "%07o", (unsigned int)filestat.st_mode & (unsigned int)0777);
@@ -92,7 +120,10 @@ TarStream::TarEntry::TarEntry(string baseDir, string name) : name(name)
 	snprintf(header.uname, sizeof(header.uname), "");
 	snprintf(header.gname, sizeof(header.gname), "");
 	snprintf(header.mtime, sizeof(header.mtime), "%011lo", filestat.st_mtime);
-	header.typeflag = '0'; // regular file
+	if (S_ISDIR(filestat.st_mode))
+		header.typeflag = '5';
+	else
+		header.typeflag = '0'; // regular file
 	memset(header.chksum, ' ', sizeof(header.chksum));
 	snprintf(header.chksum, sizeof(header.chksum), "%06o", calculateChkSum((const char *)&header, sizeof(header)));
 	
@@ -105,14 +136,25 @@ TarStream::TarEntry::~TarEntry()
 
 const size_t TarStream::TarEntry::getSize() const
 {
-	return size + 2 * sizeof(header) - size % sizeof(header);
+	int result = 0;
+	result += sizeof(header);
+	result += size;
+	if ((size % sizeof(header)) > 0)
+		result += sizeof(header) - (size % sizeof(header));
+	fprintf(stderr, "Size of %s is %d\n", path.c_str(), result);
+	return result;
 }
 
 string TarStream::TarEntry::getChunk(size_t start, size_t size) const
 {
 	char buf[size];
 	char *p = buf;
-	FILE *pFile = fopen(header.name, "r");
+	FILE *pFile = fopen(path.c_str(), "r");
+	if (!pFile)
+	{
+		fprintf(stderr, "Cant't read file: %s\n", path.c_str());
+	}
+
 	if (start <= sizeof(header))
 	{
 		memcpy(p, (const char *)&header, sizeof(header)-start);
@@ -120,6 +162,11 @@ string TarStream::TarEntry::getChunk(size_t start, size_t size) const
 	}
 	if(start+size > sizeof(header))
 	{
+		if(isDir)
+		{
+			string result(buf, sizeof(header)-start);
+			return result;
+		}
 		if(start <= sizeof(header))
 			start = 0;
 		else
