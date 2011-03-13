@@ -37,6 +37,7 @@ class TarStream {
 				~TarFile();
 				string getChunk(size_t start, size_t size) const;
 			private:
+				unsigned int calculateChkSum(const char *header, const size_t s);
 				string name;
 				size_t size;
 				TarHeaderBlock header;

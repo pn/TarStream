@@ -68,6 +68,15 @@ size_t TarStream::getSize() const
 	return result + 2 * sizeof(TarHeaderBlock);
 }
 
+unsigned int TarStream::TarFile::calculateChkSum(const char *header, const size_t s)
+{
+	unsigned int sum = 0, i;
+	for (i = 0; i < s; i++) {
+		sum += header[i] & 0xff;
+	}
+	return sum;
+}
+
 TarStream::TarFile::TarFile(string baseDir, string name) : name(name)
 {
 	struct stat filestat;
@@ -85,14 +94,7 @@ TarStream::TarFile::TarFile(string baseDir, string name) : name(name)
 	snprintf(header.mtime, sizeof(header.mtime), "%011lo", filestat.st_mtime);
 	header.typeflag = '0'; // regular file
 	memset(header.chksum, ' ', sizeof(header.chksum));
-	unsigned int sum = 0;
-	char *p = (char *) &header;
-	char *q = p + sizeof(header);
-	int i=0;
-	while (p < q) { sum += *p++ & 0xff; i++;}
-	memset(header.chksum, ' ', sizeof(header.chksum));
-	fprintf(stderr, "summed chars %d\n", i);
-	snprintf(header.chksum, sizeof(header.chksum), "%06o", sum);
+	snprintf(header.chksum, sizeof(header.chksum), "%06o", calculateChkSum((const char *)&header, sizeof(header)));
 	
 	fprintf(stderr, "Created file %s, size %llu\n", this->name.c_str(), (unsigned long long)size);
 }
