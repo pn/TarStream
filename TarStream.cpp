@@ -70,7 +70,6 @@ size_t TarStream::getSize() const
 
 TarStream::TarFile::TarFile(string baseDir, string name) : name(name)
 {
-	const char magic = 6;
 	struct stat filestat;
 	stat(name.c_str(), &filestat);
 	size = filestat.st_size;
@@ -84,7 +83,8 @@ TarStream::TarFile::TarFile(string baseDir, string name) : name(name)
 	snprintf(header.uname, sizeof(header.uname), "");
 	snprintf(header.gname, sizeof(header.gname), "");
 	snprintf(header.mtime, sizeof(header.mtime), "%011lo", filestat.st_mtime);
-	memset(header.chksum, ' ' + magic, sizeof(header.chksum));
+	header.typeflag = '0'; // regular file
+	memset(header.chksum, ' ', sizeof(header.chksum));
 	unsigned int sum = 0;
 	char *p = (char *) &header;
 	char *q = p + sizeof(header);
@@ -93,7 +93,6 @@ TarStream::TarFile::TarFile(string baseDir, string name) : name(name)
 	memset(header.chksum, ' ', sizeof(header.chksum));
 	fprintf(stderr, "summed chars %d\n", i);
 	snprintf(header.chksum, sizeof(header.chksum), "%06o", sum);
-	header.typeflag = '0'; // regular file
 	
 	fprintf(stderr, "Created file %s, size %llu\n", this->name.c_str(), (unsigned long long)size);
 }
