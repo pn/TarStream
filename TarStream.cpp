@@ -10,7 +10,7 @@ TarStream::TarStream(string baseDir, vector<string> files)
 	vector<string>::const_iterator ci;
 	for (ci = files.begin(); ci != files.end(); ++ci)
 	{
-		TarFile file(baseDir, *ci);
+		TarEntry file(baseDir, *ci);
 		this->files.push_back(file);
 	}
 }
@@ -24,7 +24,7 @@ string TarStream::getChunk(size_t start, size_t size)
 	char buf[size];
 	char *p = buf;
 	size_t file_size, orig_size = size;
-	vector<class TarFile>::const_iterator ci;
+	vector<class TarEntry>::const_iterator ci;
 	for (ci = files.begin(); ci != files.end(); ++ci)
 	{
 		file_size = ci->getSize();
@@ -60,7 +60,7 @@ string TarStream::getChunk(size_t start, size_t size)
 size_t TarStream::getSize() const
 {
 	size_t result = 0;
-	vector<class TarFile>::const_iterator ci;
+	vector<class TarEntry>::const_iterator ci;
 	for (ci = files.begin(); ci != files.end(); ++ci)
 	{
 		result += ci->getSize();
@@ -68,7 +68,7 @@ size_t TarStream::getSize() const
 	return result + 2 * sizeof(TarHeaderBlock);
 }
 
-unsigned int TarStream::TarFile::calculateChkSum(const char *header, const size_t s)
+unsigned int TarStream::TarEntry::calculateChkSum(const char *header, const size_t s)
 {
 	unsigned int sum = 0, i;
 	for (i = 0; i < s; i++) {
@@ -77,7 +77,7 @@ unsigned int TarStream::TarFile::calculateChkSum(const char *header, const size_
 	return sum;
 }
 
-TarStream::TarFile::TarFile(string baseDir, string name) : name(name)
+TarStream::TarEntry::TarEntry(string baseDir, string name) : name(name)
 {
 	struct stat filestat;
 	stat(name.c_str(), &filestat);
@@ -99,16 +99,16 @@ TarStream::TarFile::TarFile(string baseDir, string name) : name(name)
 	fprintf(stderr, "Created file %s, size %llu\n", this->name.c_str(), (unsigned long long)size);
 }
 
-TarStream::TarFile::~TarFile()
+TarStream::TarEntry::~TarEntry()
 {
 }
 
-const size_t TarStream::TarFile::getSize() const
+const size_t TarStream::TarEntry::getSize() const
 {
 	return size + 2 * sizeof(header) - size % sizeof(header);
 }
 
-string TarStream::TarFile::getChunk(size_t start, size_t size) const
+string TarStream::TarEntry::getChunk(size_t start, size_t size) const
 {
 	char buf[size];
 	char *p = buf;

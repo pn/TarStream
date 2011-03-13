@@ -30,11 +30,11 @@ class TarStream {
 		string getChunk(size_t start, size_t size);
 		size_t getSize() const;
 	private:
-		class TarFile {
+		class TarEntry {
 			public:
 				const size_t getSize() const;
-				TarFile(string, string);
-				~TarFile();
+				TarEntry(string, string);
+				~TarEntry();
 				string getChunk(size_t start, size_t size) const;
 			private:
 				unsigned int calculateChkSum(const char *header, const size_t s);
@@ -42,7 +42,7 @@ class TarStream {
 				size_t size;
 				TarHeaderBlock header;
 		};
-		vector<class TarFile> files;
+		vector<class TarEntry> files;
 };
 
 #endif //_TARSTREAM_H_
