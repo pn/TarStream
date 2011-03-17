@@ -84,7 +84,7 @@ class TarStream {
 				size_t size;
 				bool isDir;
 				TarHeaderBlock header;
-				std::fstream *file;
+				std::ifstream *file;
 		};
 		std::vector<class TarEntry> files;
 		//std::set<class TarEntry> files; TODO

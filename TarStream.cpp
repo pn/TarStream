@@ -129,7 +129,7 @@ TarStream::TarEntry::TarEntry(string path, string name, bool dir) : path(path)
 	snprintf(header.chksum, sizeof(header.chksum), "%06o", calculateChkSum((const char *)&header, sizeof(header)));
 	
 	//fprintf(stderr, "Created file %s, size %llu\n", this->name.c_str(), (unsigned long long)size);
-	file = new fstream();
+	file = new ifstream();
 }
 
 TarStream::TarEntry::~TarEntry()
@@ -152,7 +152,7 @@ string TarStream::TarEntry::getChunk(size_t start, size_t size) const
 	char buf[size];
 	char *p = buf;
 	if (!file->is_open())
-		file->open(path.c_str(), ifstream::in|ifstream::binary);
+		file->open(path.c_str(), ifstream::binary);
 	if (!file->is_open())
 	{
 		fprintf(stderr, "Cant't read file: %s\n", path.c_str());
