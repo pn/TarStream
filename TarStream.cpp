@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <fstream>
 #include "TarStream.h"
 using namespace std;
 
@@ -149,8 +150,9 @@ string TarStream::TarEntry::getChunk(size_t start, size_t size) const
 {
 	char buf[size];
 	char *p = buf;
-	FILE *pFile = fopen(path.c_str(), "r");
-	if (!pFile)
+	fstream file;
+	file.open(path.c_str(), ifstream::in|ifstream::binary);
+	if (!file.is_open())
 	{
 		fprintf(stderr, "Cant't read file: %s\n", path.c_str());
 	}
@@ -171,13 +173,14 @@ string TarStream::TarEntry::getChunk(size_t start, size_t size) const
 			start = 0;
 		else
 			start -= sizeof(header);
-		fseek(pFile, start, SEEK_SET);
-		size_t numread = fread(p, 1, size - (p - buf), pFile);
+		file.seekg(start);
+		file.read(p, size - (p - buf));
+		streamsize numread = file.gcount();
 		if (numread < size - (p - buf))
 		{
 			memset(p+numread, 0, size - (p - buf) - numread);
 		}
-		fclose(pFile);
+		file.close();
 	}
 	string result(buf, size);
 	return result;
