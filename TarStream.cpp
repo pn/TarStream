@@ -128,7 +128,7 @@ TarStream::TarEntry::TarEntry(string path, string name, bool dir) : path(path)
 	memset(header.chksum, ' ', sizeof(header.chksum));
 	snprintf(header.chksum, sizeof(header.chksum), "%06o", calculateChkSum((const char *)&header, sizeof(header)));
 	
-	fprintf(stderr, "Created file %s, size %llu\n", this->name.c_str(), (unsigned long long)size);
+	//fprintf(stderr, "Created file %s, size %llu\n", this->name.c_str(), (unsigned long long)size);
 	file = new fstream();
 }
 
@@ -143,7 +143,7 @@ const size_t TarStream::TarEntry::getSize() const
 	result += size;
 	if ((size % sizeof(header)) > 0)
 		result += sizeof(header) - (size % sizeof(header));
-	fprintf(stderr, "Size of %s is %d\n", path.c_str(), result);
+	//fprintf(stderr, "Size of %s is %d\n", path.c_str(), result);
 	return result;
 }
 
