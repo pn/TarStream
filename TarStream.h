@@ -2,7 +2,6 @@
 #define _TARSTREAM_H_
 #include <string>
 #include <vector>
-using namespace std;
 
 struct TarHeaderBlock {
 	char name[100];     // file name
@@ -29,7 +28,6 @@ class TarStream {
 		 * Creates 'empty' TarStream. Sets internal read cursor to the beginning of the stream.
 		 */
 		TarStream();
-		//TarStream(string baseDir, vector<string>); XXX:remove
 
 		/*
 		 * Releases internal structures if needed.
@@ -76,18 +74,18 @@ class TarStream {
 		class TarEntry {
 			public:
 				const size_t getSize() const;
-				TarEntry(string, string="", bool=false);
+				TarEntry(std::string, std::string="", bool=false);
 				~TarEntry();
-				string getChunk(size_t start, size_t size) const;
+				std::string getChunk(size_t start, size_t size) const;
 			private:
 				unsigned int calculateChkSum(const char *header, const size_t s);
-				string name;
-				string path;
+				std::string name;
+				std::string path;
 				size_t size;
 				bool isDir;
 				TarHeaderBlock header;
 		};
-		vector<class TarEntry> files;
+		std::vector<class TarEntry> files;
 		//std::set<class TarEntry> files; TODO
 		size_t readCursor;
 };
