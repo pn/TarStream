@@ -129,7 +129,6 @@ TarStream::TarEntry::TarEntry(string path, string name, bool dir) : path(path)
 	snprintf(header.chksum, sizeof(header.chksum), "%06o", calculateChkSum((const char *)&header, sizeof(header)));
 	
 	//fprintf(stderr, "Created file %s, size %llu\n", this->name.c_str(), (unsigned long long)size);
-	file = new ifstream();
 }
 
 TarStream::TarEntry::~TarEntry()
@@ -151,9 +150,9 @@ string TarStream::TarEntry::getChunk(size_t start, size_t size)
 {
 	char buf[size];
 	char *p = buf;
-	if (!file->is_open())
-		file->open(path.c_str(), ifstream::binary);
-	if (!file->is_open())
+	if (!file.is_open())
+		file.open(path.c_str(), ifstream::binary);
+	if (!file.is_open())
 	{
 		fprintf(stderr, "Cant't read file: %s\n", path.c_str());
 	}
@@ -174,14 +173,14 @@ string TarStream::TarEntry::getChunk(size_t start, size_t size)
 			start = 0;
 		else
 			start -= sizeof(header);
-		file->seekg(start);
-		file->read(p, size - (p - buf));
-		streamsize numread = file->gcount();
+		file.seekg(start);
+		file.read(p, size - (p - buf));
+		streamsize numread = file.gcount();
 		if (numread < size - (p - buf))
 		{
 			memset(p+numread, 0, size - (p - buf) - numread);
 		}
-		file->close();
+		file.close();
 	}
 	string result(buf, size);
 	return result;

@@ -74,6 +74,18 @@ class TarStream {
 		class TarEntry {
 			public:
 				const size_t getSize() const;
+				TarEntry(const TarEntry &entry) : name(entry.name), path(entry.path), size(entry.size), isDir(entry.isDir), header(entry.header)
+				{
+				}
+				TarEntry& operator=(const TarEntry &entry)
+				{
+					this->name = entry.name;
+					this->path = entry.path;
+					this->size = entry.size;
+					this->isDir = entry.isDir;
+					this->header = entry.header;
+					return *this;
+				}
 				TarEntry(std::string, std::string="", bool=false);
 				~TarEntry();
 				std::string getChunk(size_t start, size_t size);
@@ -84,7 +96,7 @@ class TarStream {
 				size_t size;
 				bool isDir;
 				TarHeaderBlock header;
-				std::ifstream *file;
+				std::ifstream file;
 		};
 		std::vector<class TarEntry> files;
 		//std::set<class TarEntry> files; TODO
