@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <unistd.h>
 #include <fcntl.h>
 #include "TarStream.h"
