@@ -33,7 +33,7 @@ size_t TarStream::getChunk(char* buf, size_t size)
 	size_t start = readCursor;
 	char *p = buf;
 	size_t file_size, orig_size = size;
-	vector<class TarEntry>::const_iterator ci;
+	vector<class TarEntry>::iterator ci;
 	for (ci = files.begin(); ci != files.end(); ++ci)
 	{
 		file_size = ci->getSize();
@@ -147,7 +147,7 @@ const size_t TarStream::TarEntry::getSize() const
 	return result;
 }
 
-string TarStream::TarEntry::getChunk(size_t start, size_t size) const
+string TarStream::TarEntry::getChunk(size_t start, size_t size)
 {
 	char buf[size];
 	char *p = buf;

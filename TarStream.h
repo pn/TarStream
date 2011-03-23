@@ -76,7 +76,7 @@ class TarStream {
 				const size_t getSize() const;
 				TarEntry(std::string, std::string="", bool=false);
 				~TarEntry();
-				std::string getChunk(size_t start, size_t size) const;
+				std::string getChunk(size_t start, size_t size);
 			private:
 				unsigned int calculateChkSum(const char *header, const size_t s);
 				std::string name;
